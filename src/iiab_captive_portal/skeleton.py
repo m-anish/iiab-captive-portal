@@ -204,7 +204,7 @@ def main(args):
     global config
     args = parse_args(args)
     setup_logging(args.loglevel)
-    config = parse_config(str(args.config_path))
+    parse_config(str(args.config_path))
     httpd = http.server.HTTPServer(('',config['port']), CaptivePortal)
     try:
         httpd.serve_forever()
