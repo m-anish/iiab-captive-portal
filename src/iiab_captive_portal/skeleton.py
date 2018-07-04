@@ -125,7 +125,7 @@ def fib(n):
 
 def parse_config(config_file):
     _logger.debug("In method parse_config")
-    config=[]
+    config={}
     try:
         _logger.debug("Attempting to read configuration from %s" % config_file)
         parser = configparser.ConfigParser()
