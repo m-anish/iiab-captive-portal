@@ -38,11 +38,11 @@ config = {}
 class CaptivePortal(http.server.BaseHTTPRequestHandler):
 
     def __init__(self, *args):
-        _logging.debug('in method __init__() of BaseHTTPRequestHandler')
+        _logger.debug('in method __init__() of BaseHTTPRequestHandler')
         http.server.BaseHTTPRequestHandler.__init__(self, *args)
         global config
-        _logging.debug('current state of config:')
-        _logging.debug(config)
+        _logger.debug('current state of config:')
+        _logger.debug(config)
         #this is the index of the captive portal
         #it simply redirects the user to the to login page
         html_redirect = """
@@ -74,7 +74,7 @@ class CaptivePortal(http.server.BaseHTTPRequestHandler):
     use the redirect page
     '''
     def do_GET(self):
-        _logging.debug('in method do_GET')
+        _logger.debug('in method do_GET')
         path = self.path
         self.send_response(200)
         self.send_header("Content-type", "text/html")
@@ -87,7 +87,7 @@ class CaptivePortal(http.server.BaseHTTPRequestHandler):
     this is called when the user submits the login form
     '''
     def do_POST(self):
-        _logging.debug('in method do_POST')
+        _logger.debug('in method do_POST')
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
@@ -104,8 +104,8 @@ class CaptivePortal(http.server.BaseHTTPRequestHandler):
         if username == config['username'] and password == config['password']:
             #authorized user
             remote_IP = self.client_address[0]
-            _logging.info('New authorization from '+ remote_IP)
-            _logging.info('Updating IP tables')
+            _logger.info('New authorization from '+ remote_IP)
+            _logger.info('Updating IP tables')
             subprocess.call(["iptables","-t", "nat", "-I", "PREROUTING","1", "-s", remote_IP, "-j" ,"ACCEPT"])
             subprocess.call(["iptables", "-I", "FORWARD", "-s", remote_IP, "-j" ,"ACCEPT"])
             self.wfile.write("You are now authorized. Navigate to any URL")
