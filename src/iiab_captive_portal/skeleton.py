@@ -39,7 +39,7 @@ class CaptivePortal(http.server.BaseHTTPRequestHandler):
 
     def __init__(self, *args):
         _logger.debug('in method __init__() of BaseHTTPRequestHandler')
-        http.server.BaseHTTPRequestHandler.__init__(self, *args)
+        super().__init__(self, *args)
         global config
         _logger.debug('current state of config:')
         _logger.debug(config)
