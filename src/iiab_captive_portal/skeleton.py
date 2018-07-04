@@ -33,10 +33,12 @@ __license__ = "gpl3"
 
 _logger = logging.getLogger(__name__)
 
+config = {}
+
 class CaptivePortal(http.server.BaseHTTPRequestHandler):
 
-    def __init__(self, config):
-        self._config = config
+    def __init__(self):
+        global config
         #this is the index of the captive portal
         #it simply redirects the user to the to login page
         html_redirect = """
@@ -48,7 +50,7 @@ class CaptivePortal(http.server.BaseHTTPRequestHandler):
             <b>Redirecting to login page</b>
         </body>
         </html>
-        """%(self._config['ip_address'], self._config['port'])
+        """%(config['ip_address'], config['port'])
         #the login page
         html_login = """
         <html>
@@ -93,7 +95,7 @@ class CaptivePortal(http.server.BaseHTTPRequestHandler):
         username = form.getvalue("username")
         password = form.getvalue("password")
         #dummy security check
-        if username == self._config['username'] and password == self._config['password']:
+        if username == config['username'] and password == config['password']:
             #authorized user
             remote_IP = self.client_address[0]
             print('New authorization from '+ remote_IP)
@@ -125,7 +127,7 @@ def fib(n):
 
 def parse_config(config_file):
     _logger.debug("In method parse_config")
-    config={}
+    global config
     try:
         _logger.debug("Attempting to read configuration from %s" % config_file)
         parser = configparser.ConfigParser()
@@ -135,9 +137,10 @@ def parse_config(config_file):
         config['iface'] = parser.get('captive-server', 'iface')
         config['port'] = int(parser.get('captive-server', 'port'))
         config['ip_address'] = parser.get('captive-server', 'ip_address')
-        return config
+        return True
     except configparser.ParsingError as err:
-        _logger.error('Could not parse:', err)    
+        _logger.error('Could not parse:', err)
+        return False    
 
 
 def parse_args(args):
@@ -198,11 +201,11 @@ def main(args):
     Args:
       args ([str]): command line parameter list
     """
+    global config
     args = parse_args(args)
     setup_logging(args.loglevel)
     config = parse_config(str(args.config_path))
-    captiveportal = CaptivePortal(config)
-    httpd = http.server.HTTPServer(('',config['port']), captiveportal)
+    httpd = http.server.HTTPServer(('',config['port']), CaptivePortal)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
