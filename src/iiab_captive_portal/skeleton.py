@@ -130,11 +130,11 @@ def parse_config(config_file):
         _logger.debug("Attempting to read configuration from %s" % config_file)
         parser = configparser.ConfigParser()
         parser.read(config_file)
-        config['username'] = parser.get('default', 'username')
-        config['password'] = parser.get('default', 'password')
-        config['iface'] = parser.get('default', 'iface')
-        config['port'] = int(parser.get('default', 'port'))
-        config['ip_address'] = parser.get('default', 'ip_address')
+        config['username'] = parser.get('captive-server', 'username')
+        config['password'] = parser.get('captive-server', 'password')
+        config['iface'] = parser.get('captive-server', 'iface')
+        config['port'] = int(parser.get('captive-server', 'port'))
+        config['ip_address'] = parser.get('captive-server', 'ip_address')
         return config
     except configparser.ParsingError as err:
         _logger.error('Could not parse:', err)    
