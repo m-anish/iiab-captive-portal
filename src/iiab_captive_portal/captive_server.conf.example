@@ -1,0 +1,6 @@
+[captive-server]
+port = 9090
+ip_address = 172.18.96.1
+iface = br0
+username = Admin
+password = g0adm1n

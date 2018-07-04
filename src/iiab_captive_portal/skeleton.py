@@ -20,6 +20,10 @@ from __future__ import division, print_function, absolute_import
 import argparse
 import sys
 import logging
+import subprocess
+import http.server
+import cgi
+import configparser
 
 from iiab_captive_portal import __version__
 
@@ -28,6 +32,79 @@ __copyright__ = "Anish Mangal"
 __license__ = "gpl3"
 
 _logger = logging.getLogger(__name__)
+
+class CaptivePortal(http.server.BaseHTTPRequestHandler):
+
+    def __init__(self, config):
+        self._config = config
+        #this is the index of the captive portal
+        #it simply redirects the user to the to login page
+        html_redirect = """
+        <html>
+        <head>
+            <meta http-equiv="refresh" content="0; url=http://%s:%s/login" />
+        </head>
+        <body>
+            <b>Redirecting to login page</b>
+        </body>
+        </html>
+        """%(self._config['ip_address'], self._config['port'])
+        #the login page
+        html_login = """
+        <html>
+        <body>
+            <b>Login Form</b>
+            <form method="POST" action="do_login">
+            Username: <input type="text" name="username"><br>
+            Password: <input type="password" name="password"><br>
+            <input type="submit" value="Submit">
+            </form>
+        </body>
+        </html>
+        """
+    
+    '''
+    if the user requests the login page show it, else
+    use the redirect page
+    '''
+    def do_GET(self):
+        path = self.path
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        if path == "/login":
+            self.wfile.write(self.html_login)
+        else:
+            self.wfile.write(self.html_redirect)
+    '''
+    this is called when the user submits the login form
+    '''
+    def do_POST(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        form = cgi.FieldStorage()
+        #form = cgi.FieldStorage(
+        #    fp=self.rfile, 
+        #    headers=self.headers,
+        #    environ={'REQUEST_METHOD':'POST',
+        #             'CONTENT_TYPE':self.headers['Content-Type'],
+        #             })
+        username = form.getvalue("username")
+        password = form.getvalue("password")
+        #dummy security check
+        if username == self._config['username'] and password == self._config['password']:
+            #authorized user
+            remote_IP = self.client_address[0]
+            print('New authorization from '+ remote_IP)
+            print('Updating IP tables')
+            subprocess.call(["iptables","-t", "nat", "-I", "PREROUTING","1", "-s", remote_IP, "-j" ,"ACCEPT"])
+            subprocess.call(["iptables", "-I", "FORWARD", "-s", remote_IP, "-j" ,"ACCEPT"])
+            self.wfile.write("You are now authorized. Navigate to any URL")
+        else:
+            #show the login form
+            self.wfile.write(self.html_login)
+        
 
 
 def fib(n):
@@ -46,6 +123,21 @@ def fib(n):
     return a
 
 
+def parse_config(config_file):
+    config=[]
+    try:
+        parser = configparser.ConfigParser()
+        parser.read(config_file)
+        config['username'] = parser.get('default', 'username')
+        config['password'] = parser.get('default', 'password')
+        config['iface'] = parser.get('default', 'iface')
+        config['port'] = int(parser.get('default', 'port'))
+        config['ip_address'] = parser.get('default', 'ip_address')
+        return config
+    except configparser.ParsingError as err:
+        _logger.error('Could not parse:', err)    
+
+
 def parse_args(args):
     """Parse command line parameters
 
@@ -56,16 +148,20 @@ def parse_args(args):
       :obj:`argparse.Namespace`: command line parameters namespace
     """
     parser = argparse.ArgumentParser(
-        description="Just a Fibonnaci demonstration")
+        description="A simple python and iptables based captive portal server for the IIAB project")
     parser.add_argument(
         '--version',
         action='version',
         version='iiab-captive-portal {ver}'.format(ver=__version__))
     parser.add_argument(
-        dest="n",
-        help="n-th Fibonacci number",
-        type=int,
-        metavar="INT")
+        '-c',
+        '--conf',
+        nargs='?',
+        const="/etc/captive_server.conf",
+        dest="config_path",
+        help="path to config file. defaults to /etc/captive_server.conf",
+        type=str,
+        metavar="STR")
     parser.add_argument(
         '-v',
         '--verbose',
@@ -102,8 +198,17 @@ def main(args):
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
-    _logger.debug("Starting crazy calculations...")
-    print("The {}-th Fibonacci number is {}".format(args.n, fib(args.n)))
+    config = parse_config(args.config_path)
+    captiveportal = CaptivePortal(config)
+    httpd = http.server.HTTPServer(('',config['port']), captiveportal)
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    httpd.server_close()
+    
+    #_logger.debug("Starting crazy calculations...")
+    #print("The {}-th Fibonacci number is {}".format(args.n, fib(args.n)))
     _logger.info("Script ends here")
 
 

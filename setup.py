@@ -16,7 +16,7 @@ entry_points = """
 [console_scripts]
 # script_name = iiab_captive_portal.module:function
 # For example:
-# fibonacci = iiab_captive_portal.skeleton:run
+captive_server = iiab_captive_portal.skeleton:run
 """
 
 

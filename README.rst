@@ -3,13 +3,12 @@ iiab-captive-portal
 ===================
 
 
-Add a short description here!
+A simple captive portal implementation with iptables and python
 
 
 Description
 ===========
 
-A longer description of your project goes here...
 
 
 Note
