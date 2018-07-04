@@ -37,32 +37,33 @@ config = {}
 
 class CaptivePortal(http.server.BaseHTTPRequestHandler):
 
-    global config
-    #this is the index of the captive portal
-    #it simply redirects the user to the to login page
-    html_redirect = """
-    <html>
-    <head>
-        <meta http-equiv="refresh" content="0; url=http://%s:%s/login" />
-    </head>
-    <body>
-        <b>Redirecting to login page</b>
-    </body>
-    </html>
-    """%(config['ip_address'], config['port'])
-    #the login page
-    html_login = """
-    <html>
-    <body>
-        <b>Login Form</b>
-        <form method="POST" action="do_login">
-        Username: <input type="text" name="username"><br>
-        Password: <input type="password" name="password"><br>
-        <input type="submit" value="Submit">
-        </form>
-    </body>
-    </html>
-    """
+    def __init__(self):
+        global config
+        #this is the index of the captive portal
+        #it simply redirects the user to the to login page
+        html_redirect = """
+        <html>
+        <head>
+            <meta http-equiv="refresh" content="0; url=http://%s:%s/login" />
+        </head>
+        <body>
+            <b>Redirecting to login page</b>
+        </body>
+        </html>
+        """%(config['ip_address'], config['port'])
+        #the login page
+        html_login = """
+        <html>
+        <body>
+            <b>Login Form</b>
+            <form method="POST" action="do_login">
+            Username: <input type="text" name="username"><br>
+            Password: <input type="password" name="password"><br>
+            <input type="submit" value="Submit">
+            </form>
+        </body>
+        </html>
+        """
     
     '''
     if the user requests the login page show it, else
