@@ -124,8 +124,10 @@ def fib(n):
 
 
 def parse_config(config_file):
+    _logger.debug("In method parse_config")
     config=[]
     try:
+        _logger.debug("Attempting to read configuration from %s" % config_file)
         parser = configparser.ConfigParser()
         parser.read(config_file)
         config['username'] = parser.get('default', 'username')
@@ -198,7 +200,7 @@ def main(args):
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
-    config = parse_config(args.config_path)
+    config = parse_config(str(args.config_path))
     captiveportal = CaptivePortal(config)
     httpd = http.server.HTTPServer(('',config['port']), captiveportal)
     try:
