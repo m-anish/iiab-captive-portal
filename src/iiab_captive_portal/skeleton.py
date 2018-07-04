@@ -38,7 +38,7 @@ config = {}
 class CaptivePortal(http.server.BaseHTTPRequestHandler):
 
     def __init__(self, *args, **kwargs):
-        http.server.BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
+        super().__init__(self, *args, **kwargs)
         global config
         #this is the index of the captive portal
         #it simply redirects the user to the to login page
